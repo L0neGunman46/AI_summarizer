@@ -10,30 +10,92 @@
         <div class="container">
             <header>
                 <h1>Summarize using AI</h1>
-                <button
-                    id="clearBtn"
-                    class="clear-btn hidden"
-                    title="Clear summary"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                <div class="header-actions">
+                    <button
+                        id="settingsBtn"
+                        class="icon-btn"
+                        title="Settings"
                     >
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                    Clear
-                </button>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                    </button>
+                    <button
+                        id="clearBtn"
+                        class="icon-btn hidden"
+                        title="Clear summary"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
             </header>
 
             <main>
+                <!-- Settings panel -->
+                <div id="settingsState" class="state hidden">
+                    <div class="settings-panel">
+                        <h2>API Settings</h2>
+
+                        <div class="form-group">
+                            <label for="apiKey">API Key</label>
+                            <input type="password" id="apiKey" placeholder="Enter your OpenRouter API key" />
+                            <small>Get your key at <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a></small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="baseUrl">Base URL</label>
+                            <input type="text" id="baseUrl" placeholder="https://openrouter.ai/api/v1" />
+                            <small>Change to use other OpenAI-compatible APIs</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="model">Model</label>
+                            <select id="model">
+                                <optgroup label="Anthropic">
+                                    <option value="anthropic/claude-3-haiku">Claude 3 Haiku (Fast)</option>
+                                    <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+                                    <option value="anthropic/claude-3-opus">Claude 3 Opus</option>
+                                </optgroup>
+                                <optgroup label="OpenAI">
+                                    <option value="openai/gpt-4o-mini">GPT-4o Mini (Fast)</option>
+                                    <option value="openai/gpt-4o">GPT-4o</option>
+                                    <option value="openai/gpt-4-turbo">GPT-4 Turbo</option>
+                                </optgroup>
+                                <optgroup label="Google">
+                                    <option value="google/gemini-flash-1.5">Gemini 1.5 Flash (Fast)</option>
+                                    <option value="google/gemini-pro-1.5">Gemini 1.5 Pro</option>
+                                </optgroup>
+                                <optgroup label="Meta">
+                                    <option value="meta-llama/llama-3.1-8b-instruct">Llama 3.1 8B (Fast/Free)</option>
+                                    <option value="meta-llama/llama-3.1-70b-instruct">Llama 3.1 70B</option>
+                                </optgroup>
+                                <optgroup label="Other">
+                                    <option value="mistralai/mistral-7b-instruct">Mistral 7B (Fast)</option>
+                                    <option value="qwen/qwen-2-7b-instruct">Qwen 2 7B (Fast)</option>
+                                </optgroup>
+                            </select>
+                            <small>Or enter a custom model ID below</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="customModel">Custom Model ID (optional)</label>
+                            <input type="text" id="customModel" placeholder="e.g., anthropic/claude-3-haiku" />
+                        </div>
+
+                        <div class="settings-actions">
+                            <button id="testConnectionBtn" class="test-btn">Test Connection</button>
+                            <button id="saveSettingsBtn" class="save-btn">Save Settings</button>
+                        </div>
+                        <div id="settingsStatus" class="settings-status hidden"></div>
+
+                        <button id="backToMainBtn" class="back-btn">Back</button>
+                    </div>
+                </div>
+
                 <!-- Initial state with summarize button -->
                 <div id="initialState" class="state">
                     <p class="description">
@@ -41,26 +103,15 @@
                         paragraphs.
                     </p>
                     <button id="summarizeBtn" class="summarize-btn">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path
-                                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                            ></path>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                             <polyline points="14 2 14 8 20 8"></polyline>
                             <line x1="16" y1="13" x2="8" y2="13"></line>
                             <line x1="16" y1="17" x2="8" y2="17"></line>
                         </svg>
                         Summarize Page
                     </button>
+                    <p id="modelIndicator" class="model-indicator"></p>
                 </div>
 
                 <!-- Loading state -->
@@ -73,58 +124,24 @@
 
                 <!-- Summary state -->
                 <div id="summaryState" class="state hidden">
-                    <!-- Paywall warning banner -->
                     <div id="paywallWarning" class="paywall-warning hidden">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path
-                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-                            ></path>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
                             <line x1="12" y1="9" x2="12" y2="13"></line>
                             <line x1="12" y1="17" x2="12.01" y2="17"></line>
                         </svg>
-                        <span
-                            >Paywall detected - summary may be incomplete</span
-                        >
+                        <span>Paywall detected - summary may be incomplete</span>
                     </div>
 
-                    <div id="summaryContent" class="summary-content">
-                        <!-- Summary paragraphs will be inserted here -->
-                    </div>
+                    <div id="summaryContent" class="summary-content"></div>
 
-                    <!-- Content stats and refresh -->
                     <div class="summary-footer">
                         <span id="contentStats" class="content-stats"></span>
-                        <button
-                            id="refreshBtn"
-                            class="refresh-btn"
-                            title="Re-extract content"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
+                        <button id="refreshBtn" class="refresh-btn" title="Re-extract content">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="23 4 23 10 17 10"></polyline>
                                 <polyline points="1 20 1 14 7 14"></polyline>
-                                <path
-                                    d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"
-                                ></path>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
                             </svg>
                             Refresh
                         </button>
@@ -134,33 +151,19 @@
                 <!-- Error state -->
                 <div id="errorState" class="state hidden">
                     <div class="error-content">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"></circle>
                             <line x1="12" y1="8" x2="12" y2="12"></line>
                             <line x1="12" y1="16" x2="12.01" y2="16"></line>
                         </svg>
-                        <p id="errorMessage">
-                            Something went wrong. Please try again.
-                        </p>
-                        <button id="retryBtn" class="retry-btn">
-                            Try Again
-                        </button>
+                        <p id="errorMessage">Something went wrong. Please try again.</p>
+                        <button id="retryBtn" class="retry-btn">Try Again</button>
                     </div>
                 </div>
             </main>
 
             <footer>
-                <p class="footer-text">Summary generated by AI</p>
+                <p class="footer-text">Powered by OpenRouter</p>
             </footer>
         </div>
 

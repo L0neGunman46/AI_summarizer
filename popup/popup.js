@@ -3,26 +3,56 @@ const initialState = document.getElementById("initialState");
 const loadingState = document.getElementById("loadingState");
 const summaryState = document.getElementById("summaryState");
 const errorState = document.getElementById("errorState");
+const settingsState = document.getElementById("settingsState");
 const summaryContent = document.getElementById("summaryContent");
 const errorMessage = document.getElementById("errorMessage");
 const paywallWarning = document.getElementById("paywallWarning");
 const contentStats = document.getElementById("contentStats");
 const refreshBtn = document.getElementById("refreshBtn");
+const modelIndicator = document.getElementById("modelIndicator");
 
 const summarizeBtn = document.getElementById("summarizeBtn");
 const clearBtn = document.getElementById("clearBtn");
 const retryBtn = document.getElementById("retryBtn");
+const settingsBtn = document.getElementById("settingsBtn");
+const backToMainBtn = document.getElementById("backToMainBtn");
+
+// Settings elements
+const apiKeyInput = document.getElementById("apiKey");
+const baseUrlInput = document.getElementById("baseUrl");
+const modelSelect = document.getElementById("model");
+const customModelInput = document.getElementById("customModel");
+const testConnectionBtn = document.getElementById("testConnectionBtn");
+const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+const settingsStatus = document.getElementById("settingsStatus");
 
 let currTabId = null;
+let previousState = "initial";
 
-// getting current tab data
+// Initialize on DOM load
 document.addEventListener("DOMContentLoaded", async () => {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   if (tabs && tabs[0]) {
     currTabId = tabs[0].id;
     await loadExistingSummary();
   }
+  await updateModelIndicator();
 });
+
+// Update model indicator on initial state
+async function updateModelIndicator() {
+  try {
+    const config = await chrome.runtime.sendMessage({ action: "getApiConfig" });
+    if (config && config.model) {
+      const modelName = config.model.split("/").pop();
+      modelIndicator.textContent = `Using: ${modelName}`;
+    } else {
+      modelIndicator.textContent = "Demo mode (no API key)";
+    }
+  } catch (err) {
+    modelIndicator.textContent = "";
+  }
+}
 
 // Show summary of current tab that already exists
 async function loadExistingSummary() {
@@ -44,13 +74,19 @@ async function loadExistingSummary() {
 }
 
 function showState(state) {
-  // Initially hide all states
+  // Store previous state for back navigation
+  if (state !== "settings" && state !== previousState) {
+    previousState = state;
+  }
+
+  // Hide all states
   initialState.classList.add("hidden");
   loadingState.classList.add("hidden");
   summaryState.classList.add("hidden");
   errorState.classList.add("hidden");
+  settingsState.classList.add("hidden");
 
-  //Hide clear button by default
+  // Hide clear button by default
   clearBtn.classList.add("hidden");
 
   switch (state) {
@@ -66,6 +102,10 @@ function showState(state) {
       break;
     case "error":
       errorState.classList.remove("hidden");
+      break;
+    case "settings":
+      settingsState.classList.remove("hidden");
+      loadSettings();
       break;
   }
 }
@@ -83,7 +123,6 @@ function showSummary(summary, metaData = {}) {
     paywallWarning.classList.add("hidden");
   }
 
-  // If there are large amount of chars
   if (metaData.charCount) {
     const formattedCount = metaData.charCount.toLocaleString();
     contentStats.textContent = `Extracted: ${formattedCount} chars`;
@@ -93,32 +132,117 @@ function showSummary(summary, metaData = {}) {
   showState("summary");
 }
 
-// escape html to prevent xss
+// Escape HTML to prevent XSS
 function preventXSS(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
 }
 
-// error display
-
+// Error display
 function showError(message) {
   errorMessage.textContent =
     message || "Something went wrong while summarizing";
   showState("error");
 }
 
-// handle summarise click
+// Load settings from storage
+async function loadSettings() {
+  try {
+    const config = await chrome.runtime.sendMessage({ action: "getApiConfig" });
+    if (config) {
+      apiKeyInput.value = config.apiKey || "";
+      baseUrlInput.value = config.baseUrl || "https://openrouter.ai/api/v1";
+
+      // Check if model is in select options
+      const modelExists = Array.from(modelSelect.options).some(
+        (opt) => opt.value === config.model
+      );
+      if (modelExists) {
+        modelSelect.value = config.model;
+        customModelInput.value = "";
+      } else {
+        modelSelect.value = "anthropic/claude-3-haiku";
+        customModelInput.value = config.model || "";
+      }
+    }
+  } catch (err) {
+    console.error("Error loading settings:", err);
+  }
+}
+
+// Save settings
+async function saveSettings() {
+  const apiKey = apiKeyInput.value.trim();
+  const baseUrl = baseUrlInput.value.trim() || "https://openrouter.ai/api/v1";
+  const model = customModelInput.value.trim() || modelSelect.value;
+
+  try {
+    await chrome.runtime.sendMessage({
+      action: "setApiConfig",
+      config: { apiKey, baseUrl, model },
+    });
+
+    showSettingsStatus("Settings saved successfully!", "success");
+    await updateModelIndicator();
+  } catch (err) {
+    showSettingsStatus(`Error saving settings: ${err.message}`, "error");
+  }
+}
+
+// Test API connection
+async function testConnection() {
+  const apiKey = apiKeyInput.value.trim();
+  const baseUrl = baseUrlInput.value.trim() || "https://openrouter.ai/api/v1";
+  const model = customModelInput.value.trim() || modelSelect.value;
+
+  if (!apiKey) {
+    showSettingsStatus("Please enter an API key first", "error");
+    return;
+  }
+
+  testConnectionBtn.disabled = true;
+  testConnectionBtn.textContent = "Testing...";
+
+  try {
+    const result = await chrome.runtime.sendMessage({
+      action: "testConnection",
+      config: { apiKey, baseUrl, model },
+    });
+
+    if (result.success) {
+      showSettingsStatus(`Connection successful! Response: "${result.response}"`, "success");
+    } else {
+      showSettingsStatus(`Connection failed: ${result.error}`, "error");
+    }
+  } catch (err) {
+    showSettingsStatus(`Error: ${err.message}`, "error");
+  } finally {
+    testConnectionBtn.disabled = false;
+    testConnectionBtn.textContent = "Test Connection";
+  }
+}
+
+// Show settings status message
+function showSettingsStatus(message, type) {
+  settingsStatus.textContent = message;
+  settingsStatus.className = `settings-status ${type}`;
+  settingsStatus.classList.remove("hidden");
+
+  setTimeout(() => {
+    settingsStatus.classList.add("hidden");
+  }, 5000);
+}
+
+// Event listeners
 summarizeBtn.addEventListener("click", async () => {
   await summarizePage();
 });
 
-// handle retry button
 retryBtn.addEventListener("click", async () => {
   await summarizePage();
 });
 
-// Refresh button click
 refreshBtn.addEventListener("click", async () => {
   await summarizePage(true);
 });
@@ -129,15 +253,31 @@ clearBtn.addEventListener("click", async () => {
     summaryContent.innerHTML = "";
     showState("initial");
   } catch (err) {
-    console.error("Error in clearning the page: ", err);
+    console.error("Error in clearing the page: ", err);
   }
 });
 
-// main summary function
+settingsBtn.addEventListener("click", () => {
+  showState("settings");
+});
+
+backToMainBtn.addEventListener("click", async () => {
+  await loadExistingSummary();
+  await updateModelIndicator();
+});
+
+saveSettingsBtn.addEventListener("click", saveSettings);
+testConnectionBtn.addEventListener("click", testConnection);
+
+// Clear custom model when select changes
+modelSelect.addEventListener("change", () => {
+  customModelInput.value = "";
+});
+
+// Main summary function
 async function summarizePage(forceWait = true) {
   showState("loading");
   try {
-    // get the current tab
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     const tab = tabs[0];
 
@@ -156,7 +296,6 @@ async function summarizePage(forceWait = true) {
       throw new Error("Cannot summarize internal pages");
     }
 
-    // Send message to background script to get summary
     const response = await chrome.runtime.sendMessage({
       action: "summarize",
       tabId: tab.id,
