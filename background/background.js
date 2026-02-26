@@ -8,7 +8,7 @@ const keys = new AIKEYS();
 const DEFAULT_CONFIG = {
   baseUrl: keys.getBaseUrl() || "https://openrouter.ai/api/v1",
   apiKey: keys.getOpenRouterKey() || "",
-  model: keys.getDefaultModel() || "anthropic/claude-3-haiku",
+  model: keys.getDefaultModel() || "z-ai/glm-4.5-air:free",
 };
 
 // Chunked summarization settings
@@ -250,8 +250,10 @@ async function callOpenAICompatibleAPI(prompt, config, maxTokens = 500) {
   // OpenRouter-specific headers
   if (baseUrl.includes("openrouter.ai")) {
     headers["HTTP-Referer"] = chrome.runtime.getURL("");
-    headers["X-Title"] = "AI Page Summarizer";
+    headers["X-OpenRouter-Title"] = "AI Page Summarizer";
   }
+
+
 
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
@@ -272,7 +274,7 @@ async function callOpenAICompatibleAPI(prompt, config, maxTokens = 500) {
     throw new Error(errorMessage);
   }
 
-  const data = await response();
+  const data = await response.json();
 
   if (!data.choices || !data.choices[0]?.message?.content) {
     throw new Error("Invalid API response format");

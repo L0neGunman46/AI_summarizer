@@ -25,9 +25,20 @@ const customModelInput = document.getElementById("customModel");
 const testConnectionBtn = document.getElementById("testConnectionBtn");
 const saveSettingsBtn = document.getElementById("saveSettingsBtn");
 const settingsStatus = document.getElementById("settingsStatus");
+const paidModelWarning = document.getElementById("paidModelWarning");
 
 let currTabId = null;
 let previousState = "initial";
+
+// Free models on OpenRouter always have the ':free' suffix
+function isPaidModel(modelId) {
+  return modelId && !modelId.trim().endsWith(":free");
+}
+
+function updatePaidModelWarning() {
+  const model = customModelInput.value.trim() || modelSelect.value;
+  paidModelWarning.classList.toggle("hidden", !isPaidModel(model));
+}
 
 // Initialize on DOM load
 document.addEventListener("DOMContentLoaded", async () => {
@@ -45,7 +56,10 @@ async function updateModelIndicator() {
     const config = await chrome.runtime.sendMessage({ action: "getApiConfig" });
     if (config && config.model) {
       const modelName = config.model.split("/").pop();
-      modelIndicator.textContent = `Using: ${modelName}`;
+      const paidBadge = isPaidModel(config.model)
+        ? ' <span class="paid-badge">PAID</span>'
+        : "";
+      modelIndicator.innerHTML = `Using: ${modelName}${paidBadge}`;
     } else {
       modelIndicator.textContent = "Demo mode (no API key)";
     }
@@ -162,10 +176,11 @@ async function loadSettings() {
         modelSelect.value = config.model;
         customModelInput.value = "";
       } else {
-        modelSelect.value = "anthropic/claude-3-haiku";
+        modelSelect.value = "anthropic/claude-haiku-4.5";
         customModelInput.value = config.model || "";
       }
     }
+    updatePaidModelWarning();
   } catch (err) {
     console.error("Error loading settings:", err);
   }
@@ -269,9 +284,14 @@ backToMainBtn.addEventListener("click", async () => {
 saveSettingsBtn.addEventListener("click", saveSettings);
 testConnectionBtn.addEventListener("click", testConnection);
 
-// Clear custom model when select changes
+// Clear custom model when select changes, update paid warning
 modelSelect.addEventListener("change", () => {
   customModelInput.value = "";
+  updatePaidModelWarning();
+});
+
+customModelInput.addEventListener("input", () => {
+  updatePaidModelWarning();
 });
 
 // Main summary function
